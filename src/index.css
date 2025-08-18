@@ -72,7 +72,7 @@
   }
 
   .site-grid-item {
-    @apply portal-card p-6 hover:border-primary/30 transition-all duration-300 cursor-pointer group;
+    @apply portal-card p-6 hover:border-primary/30 transition-all duration-300 cursor-pointer;
   }
 
   .site-grid-item:hover {

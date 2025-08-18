@@ -140,7 +140,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
               return (
                 <div
                   key={site.name}
-                  className="site-grid-item"
+                  className="site-grid-item group"
                   onClick={() => handleOpenSite(site.url, site.name)}
                 >
                   <div className="flex items-center justify-between mb-4">
