@@ -15,6 +15,7 @@ import {
   Star
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ProxyViewer } from "./ProxyViewer";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -22,6 +23,8 @@ interface DashboardProps {
 
 export const Dashboard = ({ onLogout }: DashboardProps) => {
   const [searchUrl, setSearchUrl] = useState("");
+  const [proxyUrl, setProxyUrl] = useState("");
+  const [showProxy, setShowProxy] = useState(false);
   const { toast } = useToast();
 
   const popularSites = [
@@ -70,11 +73,11 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
   ];
 
   const handleOpenSite = (url: string, name: string) => {
-    // In a real proxy, this would route through the proxy service
-    window.open(url, '_blank');
+    setProxyUrl(url);
+    setShowProxy(true);
     toast({
-      title: `Opening ${name}`,
-      description: "Launching in new tab via proxy...",
+      title: `Loading ${name}`,
+      description: "Opening via secure proxy...",
     });
   };
 
@@ -85,10 +88,24 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
-      handleOpenSite(url, "Custom Site");
+      setProxyUrl(url);
+      setShowProxy(true);
       setSearchUrl("");
+      toast({
+        title: "Loading website",
+        description: "Opening via secure proxy...",
+      });
     }
   };
+
+  if (showProxy) {
+    return (
+      <ProxyViewer 
+        initialUrl={proxyUrl} 
+        onBack={() => setShowProxy(false)} 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen p-6">
