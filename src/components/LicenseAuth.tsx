@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Shield, Key, Unlock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Shield, Key, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface LicenseAuthProps {
@@ -15,94 +16,109 @@ export const LicenseAuth = ({ onAuthenticated }: LicenseAuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Demo license keys - in real app, this would be server-side validation
-  const validKeys = [
-    "SCHOOL-2024-PREMIUM",
-    "EDU-ACCESS-2024",
-    "STUDENT-PORTAL-KEY",
-    "UNBLOCK-PRO-2024"
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!licenseKey.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a license key",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (validKeys.includes(licenseKey.toUpperCase())) {
-        toast({
-          title: "Access Granted! 🎉",
-          description: "Welcome to the UnblockEd Portal",
-        });
-        onAuthenticated();
-      } else {
-        toast({
-          title: "Invalid License Key",
-          description: "Please check your license key and try again.",
-          variant: "destructive",
-        });
+    try {
+      // Check if license key exists and is valid
+      const { data, error } = await supabase
+        .from('license_keys')
+        .select('*')
+        .eq('key', licenseKey.trim())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        throw new Error('Invalid license key');
       }
+
+      // Check if key is expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        throw new Error('License key has expired');
+      }
+
+      // Update last used timestamp
+      await supabase
+        .from('license_keys')
+        .update({ last_used_at: new Date().toISOString() })
+        .eq('id', data.id);
+
+      toast({
+        title: "Access Granted",
+        description: "Welcome to the UnblockEd Portal!",
+      });
+
+      onAuthenticated();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication failed';
+      toast({
+        title: "Access Denied",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="portal-card w-full max-w-md p-8 text-center">
-        <div className="animate-float mb-8">
-          <Shield className="w-16 h-16 mx-auto text-primary neon-text" />
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
+      
+      <Card className="portal-card p-8 w-full max-w-md relative z-10">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+            <Shield className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold gradient-text mb-2">UnblockEd Portal</h1>
+          <p className="text-muted-foreground">Enter your license key to continue</p>
         </div>
-        
-        <h1 className="text-3xl font-bold mb-2 gradient-text">
-          UnblockEd Portal
-        </h1>
-        <p className="text-muted-foreground mb-8">
-          Enter your license key to access unlimited content
-        </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
             <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Enter license key..."
+              placeholder="Enter license key (e.g., XXXX-XXXX-XXXX-XXXX)"
               value={licenseKey}
-              onChange={(e) => setLicenseKey(e.target.value)}
-              className="pl-10 h-12 text-center font-mono tracking-wider"
-              disabled={isLoading}
+              onChange={(e) => setLicenseKey(e.target.value.toUpperCase())}
+              className="pl-12 h-12 text-center font-mono"
+              required
             />
           </div>
-          
-          <Button
-            type="submit"
-            disabled={isLoading || !licenseKey}
-            className="portal-button w-full h-12 animate-pulse-glow"
+
+          <Button 
+            type="submit" 
+            className="w-full portal-button h-12"
+            disabled={isLoading}
           >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Validating...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Unlock className="w-5 h-5" />
-                Unlock Portal
-              </div>
-            )}
+            {isLoading ? "Verifying..." : "Access Portal"}
           </Button>
         </form>
 
-        <div className="mt-8 p-4 bg-secondary/50 rounded-lg">
-          <p className="text-sm text-muted-foreground mb-2">Demo Keys:</p>
-          <div className="space-y-1 text-xs font-mono">
-            {validKeys.map(key => (
-              <button
-                key={key}
-                onClick={() => setLicenseKey(key)}
-                className="block w-full text-primary hover:text-primary/80 transition-colors"
-              >
-                {key}
-              </button>
-            ))}
+        <div className="mt-6 p-4 bg-secondary/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium mb-1">Need a license key?</p>
+              <p className="text-xs text-muted-foreground">
+                Contact your administrator or visit{" "}
+                <a href="/admin" className="text-primary hover:underline">
+                  the admin panel
+                </a>{" "}
+                if you have administrative access.
+              </p>
+            </div>
           </div>
         </div>
       </Card>
