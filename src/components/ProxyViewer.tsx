@@ -43,7 +43,7 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
         throw new Error(data.error);
       }
 
-      setContent(data);
+      setContent(data.content);
       toast({
         title: "Success",
         description: "Website loaded successfully",

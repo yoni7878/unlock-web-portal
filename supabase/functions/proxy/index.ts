@@ -79,14 +79,19 @@ serve(async (req) => {
         .replace(/<head>/i, `<head><base href="${baseUrl}/">`)
     }
 
-    return new Response(content, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': contentType,
-        'X-Frame-Options': 'ALLOWALL',
-        'Content-Security-Policy': 'frame-ancestors *;'
+    return new Response(
+      JSON.stringify({ 
+        content, 
+        contentType,
+        url: targetUrl.toString() 
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
-    })
+    )
 
   } catch (error) {
     console.error('Proxy error:', error)
