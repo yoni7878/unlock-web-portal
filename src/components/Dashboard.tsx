@@ -12,10 +12,12 @@ import {
   MessageCircle,
   LogOut,
   ExternalLink,
-  Star
+  Star,
+  Settings as SettingsIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProxyViewer } from "./ProxyViewer";
+import { Settings } from "./Settings";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -25,6 +27,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
   const [searchUrl, setSearchUrl] = useState("");
   const [proxyUrl, setProxyUrl] = useState("");
   const [showProxy, setShowProxy] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
 
   const popularSites = [
@@ -107,6 +110,14 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
     );
   }
 
+  if (showSettings) {
+    return (
+      <Settings 
+        onBack={() => setShowSettings(false)} 
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen p-6">
       <header className="flex justify-between items-center mb-8">
@@ -114,14 +125,24 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
           <h1 className="text-4xl font-bold gradient-text">UnblockEd Portal</h1>
           <p className="text-muted-foreground mt-2">Access the web without limits</p>
         </div>
-        <Button
-          onClick={onLogout}
-          variant="outline"
-          className="flex items-center gap-2"
-        >
-          <LogOut className="w-4 h-4" />
-          Logout
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowSettings(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            Settings
+          </Button>
+          <Button
+            onClick={onLogout}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
+        </div>
       </header>
 
       <div className="max-w-6xl mx-auto">
