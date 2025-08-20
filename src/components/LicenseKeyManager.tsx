@@ -65,7 +65,8 @@ export const LicenseKeyManager = ({ licenseKeys, loading, onUpdate }: LicenseKey
     try {
       const keyToInsert = newKey.customKey || generateRandomKey();
       
-      const { error } = await supabase
+      console.log('Attempting to create license key:', keyToInsert);
+      const { data, error } = await supabase
         .from('license_keys')
         .insert({
           key: keyToInsert,
@@ -86,9 +87,10 @@ export const LicenseKeyManager = ({ licenseKeys, loading, onUpdate }: LicenseKey
       onUpdate();
     } catch (error) {
       console.error('Error creating license key:', error);
+      console.error('Full error details:', JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: "Failed to create license key",
+        description: `Failed to create license key: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
