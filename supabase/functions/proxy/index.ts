@@ -141,27 +141,85 @@ serve(async (req) => {
               get: function() { return window; }
             });
             
-            // Intercept navigation
+            // Prevent all navigation attempts
+            window.addEventListener('beforeunload', function(e) {
+              e.preventDefault();
+              e.returnValue = '';
+              return '';
+            });
+            
+            // Override window.open to prevent popups
+            window.open = function(url, target, features) {
+              window.parent.postMessage({type: 'navigate', url: url}, '*');
+              return null;
+            };
+            
+            // Override location changes
+            let originalReplace = window.location.replace;
+            let originalAssign = window.location.assign;
+            
+            window.location.replace = function(url) {
+              window.parent.postMessage({type: 'navigate', url: url}, '*');
+            };
+            
+            window.location.assign = function(url) {
+              window.parent.postMessage({type: 'navigate', url: url}, '*');
+            };
+            
+            // Intercept all navigation attempts
             document.addEventListener('click', function(e) {
               const link = e.target.closest('a');
               if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
                 e.preventDefault();
+                e.stopPropagation();
                 window.parent.postMessage({type: 'navigate', url: link.href}, '*');
+                return false;
               }
-            });
+            }, true);
+            
+            // Also intercept form submissions that might navigate
+            document.addEventListener('submit', function(e) {
+              const form = e.target;
+              if (form && form.action && form.method && form.method.toLowerCase() === 'get') {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData);
+                const url = form.action + (form.action.includes('?') ? '&' : '?') + params.toString();
+                window.parent.postMessage({type: 'navigate', url: url}, '*');
+                return false;
+              }
+            }, true);
             
             // Handle dynamic content loading
             const observer = new MutationObserver(function(mutations) {
               mutations.forEach(function(mutation) {
                 if (mutation.type === 'childList') {
                   mutation.addedNodes.forEach(function(node) {
-                    if (node.nodeType === 1 && node.tagName === 'A') {
-                      node.addEventListener('click', function(e) {
-                        if (this.href && !this.href.startsWith('javascript:') && !this.href.startsWith('#')) {
-                          e.preventDefault();
-                          window.parent.postMessage({type: 'navigate', url: this.href}, '*');
-                        }
-                      });
+                    if (node.nodeType === 1) {
+                      // Handle links
+                      if (node.tagName === 'A') {
+                        node.addEventListener('click', function(e) {
+                          if (this.href && !this.href.startsWith('javascript:') && !this.href.startsWith('#')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.parent.postMessage({type: 'navigate', url: this.href}, '*');
+                            return false;
+                          }
+                        }, true);
+                      }
+                      // Handle nested links
+                      const links = node.querySelectorAll ? node.querySelectorAll('a') : [];
+                      for (let i = 0; i < links.length; i++) {
+                        const link = links[i];
+                        link.addEventListener('click', function(e) {
+                          if (this.href && !this.href.startsWith('javascript:') && !this.href.startsWith('#')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.parent.postMessage({type: 'navigate', url: this.href}, '*');
+                            return false;
+                          }
+                        }, true);
+                      }
                     }
                   });
                 }

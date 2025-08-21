@@ -195,9 +195,23 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
             <iframe
               srcDoc={content}
               className={`w-full border-0 ${isFullscreen ? 'h-[calc(100vh-100px)]' : 'h-[600px]'}`}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-navigation"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               title="Proxied Website"
               style={{ backgroundColor: 'white' }}
+              onLoad={() => {
+                // Additional safety: prevent navigation within iframe
+                const iframe = document.querySelector('iframe[title="Proxied Website"]') as HTMLIFrameElement;
+                if (iframe?.contentWindow) {
+                  try {
+                    iframe.contentWindow.addEventListener('beforeunload', (e) => {
+                      e.preventDefault();
+                      return false;
+                    });
+                  } catch (e) {
+                    // Cross-origin restriction, ignore
+                  }
+                }
+              }}
             />
           </Card>
         )}
