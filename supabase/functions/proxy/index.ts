@@ -110,6 +110,19 @@ serve(async (req) => {
         // Remove any dark theme classes that might cause issues
         .replace(/class="[^"]*dark[^"]*"/gi, 'class=""')
         .replace(/data-theme="dark"/gi, 'data-theme="light"')
+        // Intercept links to redirect through proxy
+        .replace(/<\/body>/i, `
+          <script>
+            document.addEventListener('click', function(e) {
+              const link = e.target.closest('a');
+              if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
+                e.preventDefault();
+                const proxyUrl = window.location.origin + '/?url=' + encodeURIComponent(link.href);
+                window.parent.postMessage({type: 'navigate', url: link.href}, '*');
+              }
+            });
+          </script>
+          </body>`)
     }
 
     return new Response(

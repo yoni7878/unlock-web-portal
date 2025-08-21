@@ -67,6 +67,17 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
     if (initialUrl) {
       loadUrl(initialUrl);
     }
+
+    // Listen for navigation messages from iframe
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'navigate' && event.data.url) {
+        setCurrentUrl(event.data.url);
+        loadUrl(event.data.url);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [initialUrl]);
 
   const handleUrlSubmit = (e: React.FormEvent) => {
