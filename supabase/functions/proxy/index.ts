@@ -37,17 +37,33 @@ serve(async (req) => {
       )
     }
 
+    // Enhanced headers for better compatibility
+    const fetchHeaders: Record<string, string> = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1',
+      'Upgrade-Insecure-Requests': '1',
+      'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"'
+    }
+
+    // Special handling for specific sites
+    if (targetUrl.hostname.includes('spotify.com')) {
+      fetchHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      fetchHeaders['Sec-Ch-Ua'] = '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"'
+    }
+
     // Fetch the target website
     const response = await fetch(targetUrl.toString(), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-      }
+      headers: fetchHeaders
     })
 
     if (!response.ok) {
@@ -75,8 +91,25 @@ serve(async (req) => {
         // Fix protocol-relative URLs
         .replace(/href=["']\/\/([^"']*?)["']/g, `href="https://$1"`)
         .replace(/src=["']\/\/([^"']*?)["']/g, `src="https://$1"`)
-        // Add base tag
-        .replace(/<head>/i, `<head><base href="${baseUrl}/">`)
+        // Add base tag and meta tags for better compatibility
+        .replace(/<head>/i, `<head>
+          <base href="${baseUrl}/">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { 
+              background: white !important; 
+              color: black !important;
+              min-height: 100vh !important;
+            }
+            * {
+              box-sizing: border-box !important;
+            }
+          </style>`)
+        // Fix dark mode issues for video sites
+        .replace(/<body([^>]*)>/i, '<body$1 style="background: white !important; color: black !important;">')
+        // Remove any dark theme classes that might cause issues
+        .replace(/class="[^"]*dark[^"]*"/gi, 'class=""')
+        .replace(/data-theme="dark"/gi, 'data-theme="light"')
     }
 
     return new Response(

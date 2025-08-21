@@ -7,7 +7,8 @@ import {
   RotateCcw, 
   ExternalLink,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Maximize
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { toast } = useToast();
 
   const loadUrl = async (url: string) => {
@@ -84,8 +86,12 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
     window.open(url, '_blank');
   };
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'min-h-screen'}`}>
       {/* Navigation Bar */}
       <Card className="portal-card m-4 p-4">
         <div className="flex items-center gap-4">
@@ -136,6 +142,14 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
             >
               <ExternalLink className="w-4 h-4" />
             </Button>
+            <Button
+              onClick={toggleFullscreen}
+              variant="outline"
+              size="sm"
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              <Maximize className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </Card>
@@ -169,9 +183,10 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
           <Card className="portal-card p-0 overflow-hidden">
             <iframe
               srcDoc={content}
-              className="w-full h-[600px] border-0"
+              className={`w-full border-0 ${isFullscreen ? 'h-[calc(100vh-100px)]' : 'h-[600px]'}`}
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-navigation"
               title="Proxied Website"
+              style={{ backgroundColor: 'white' }}
             />
           </Card>
         )}
