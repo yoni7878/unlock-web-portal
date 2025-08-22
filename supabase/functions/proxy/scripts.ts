@@ -1,22 +1,39 @@
 export function generateProxyScript(hostname: string): string {
   return `
     <script>
-      console.log('Proxy iframe scripts loaded for ${hostname}');
+      console.log('Ultra-aggressive proxy scripts loaded for ${hostname}');
       
-      // Complete iframe detection override
+      // Override ALL possible iframe detection methods
       try {
+        // Lock down window properties completely
         Object.defineProperty(window, 'top', {
           get: function() { return window; },
-          configurable: false
+          set: function() { return false; },
+          configurable: false,
+          enumerable: false
         });
         Object.defineProperty(window, 'parent', {
           get: function() { return window; },
-          configurable: false
+          set: function() { return false; },
+          configurable: false,
+          enumerable: false
         });
         Object.defineProperty(window, 'frameElement', {
           get: function() { return null; },
+          set: function() { return false; },
+          configurable: false,
+          enumerable: false
+        });
+        Object.defineProperty(window, 'frames', {
+          get: function() { return window; },
           configurable: false
         });
+        
+        // Override self and top globally
+        window.self = window;
+        window.top = window;
+        window.parent = window;
+        
       } catch(e) {
         console.log('Error overriding window properties:', e);
       }

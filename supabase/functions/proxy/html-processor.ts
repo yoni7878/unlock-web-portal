@@ -5,16 +5,56 @@ export function processHtmlContent(content: string, targetUrl: URL): string {
   
   const baseUrl = `${targetUrl.protocol}//${targetUrl.host}`
   
-  // More aggressive iframe restriction removal
-  const processedContent = content
-    // Remove ALL security headers that could block iframe embedding
-    .replace(/<meta[^>]*http-equiv\s*=\s*["']X-Frame-Options["'][^>]*>/gi, '')
-    .replace(/<meta[^>]*http-equiv\s*=\s*["']Content-Security-Policy["'][^>]*>/gi, '')
+  // Special handling for problematic sites
+  const isYouTube = targetUrl.hostname.includes('youtube.com')
+  const isSpotify = targetUrl.hostname.includes('spotify.com')
+  const isTikTok = targetUrl.hostname.includes('tiktok.com')
+  
+  console.log(`Site type: YouTube=${isYouTube}, Spotify=${isSpotify}, TikTok=${isTikTok}`)
+  
+  // Ultra-aggressive iframe restriction removal
+  let processedContent = content
+    // Remove ALL security headers and meta tags
+    .replace(/<meta[^>]*http-equiv[^>]*>/gi, '')
     .replace(/<meta[^>]*name\s*=\s*["']referrer["'][^>]*>/gi, '')
+    .replace(/<meta[^>]*name\s*=\s*["']viewport["'][^>]*>/gi, '')
     
-    // Remove any existing X-Frame-Options or CSP from HTML
-    .replace(/X-Frame-Options\s*:\s*[^;"\n\r]*/gi, '')
-    .replace(/Content-Security-Policy\s*:\s*[^;"\n\r]*/gi, '')
+    // Remove CSP and frame-ancestors completely
+    .replace(/Content-Security-Policy[^;"\n\r]*/gi, '')
+    .replace(/X-Frame-Options[^;"\n\r]*/gi, '')
+    .replace(/frame-ancestors[^;"\n\r]*/gi, '')
+    
+    // Remove any script that might detect iframes
+    .replace(/<script[^>]*>[\s\S]*?if[\s\S]*?(top|parent|frameElement)[\s\S]*?<\/script>/gi, '')
+    .replace(/window\.top[^;]*;/gi, '// removed iframe check')
+    .replace(/self\s*[!=]=?\s*top/gi, 'false')
+    .replace(/parent\s*[!=]=?\s*window/gi, 'false')
+    .replace(/window\s*[!=]=?\s*window\.top/gi, 'false')
+    
+    // Remove redirects and navigation blockers
+    .replace(/location\.href\s*=\s*["'][^"']*["']/gi, '// blocked redirect')
+    .replace(/window\.location\s*=\s*["'][^"']*["']/gi, '// blocked redirect')
+    .replace(/document\.location\s*=\s*["'][^"']*["']/gi, '// blocked redirect')
+    
+    // Site-specific fixes
+    if (isYouTube) {
+      processedContent = processedContent
+        .replace(/ytInitialData/g, 'ytInitialDataProxy')
+        .replace(/ytInitialPlayerResponse/g, 'ytInitialPlayerResponseProxy')
+        .replace(/yt\.config_/g, 'ytProxy.config_')
+    }
+    
+    if (isSpotify) {
+      processedContent = processedContent
+        .replace(/Spotify\.AppLoader/g, 'SpotifyProxy.AppLoader')
+        .replace(/window\.location\.reload/g, '// blocked reload')
+    }
+    
+    if (isTikTok) {
+      processedContent = processedContent
+        .replace(/window\.SIGI_STATE/g, 'window.SIGI_STATE_PROXY')
+        .replace(/TikTok\.initialize/g, 'TikTokProxy.initialize')
+    }
     
     // Fix relative links and resources
     .replace(/href\s*=\s*["']\s*\/([^"']*?)["']/g, `href="${baseUrl}/$1"`)
@@ -25,23 +65,13 @@ export function processHtmlContent(content: string, targetUrl: URL): string {
     .replace(/href\s*=\s*["']\s*\/\/([^"']*?)["']/g, `href="https://$1"`)
     .replace(/src\s*=\s*["']\s*\/\/([^"']*?)["']/g, `src="https://$1"`)
     
-    // More comprehensive iframe detection removal
-    .replace(/if\s*\(\s*(window\s*[!=]=?\s*window\.top|self\s*[!=]=?\s*top|parent\s*[!=]=?\s*self|window\s*[!=]=?\s*top|top\s*[!=]=?\s*self)\s*\)/gi, 'if(false)')
-    .replace(/window\.top\s*[!=]=?\s*window/gi, 'false')
-    .replace(/self\s*[!=]=?\s*top/gi, 'false')
-    .replace(/parent\s*[!=]=?\s*self/gi, 'false')
-    
-    // Remove common redirect scripts
-    .replace(/window\.location\s*=\s*["'][^"']*["']/gi, '// removed redirect')
-    .replace(/document\.location\s*=\s*["'][^"']*["']/gi, '// removed redirect')
-    .replace(/location\.href\s*=\s*["'][^"']*["']/gi, '// removed redirect')
-    
-    // Add comprehensive base tag and meta tags
+    // Add ultra-permissive headers and base
     .replace(/<head[^>]*>/i, `<head>
       <base href="${baseUrl}/">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors *;">
+      <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+      <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: filesystem:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; frame-ancestors *; child-src *;">
       <meta http-equiv="X-Frame-Options" content="ALLOWALL">
+      <meta http-equiv="Permissions-Policy" content="*">
       <style>
         body { 
           background: white !important; 
@@ -49,15 +79,19 @@ export function processHtmlContent(content: string, targetUrl: URL): string {
           min-height: 100vh !important;
           margin: 0 !important;
           padding: 0 !important;
+          overflow: visible !important;
         }
-        * {
+        html, * {
           box-sizing: border-box !important;
+          position: relative !important;
         }
-        /* Hide iframe detection overlays and redirects */
-        [style*="position: fixed"][style*="z-index"] {
+        /* Ultra-aggressive iframe blocker removal */
+        .iframe-blocker, .frame-blocker, [class*="frame-deny"], [class*="iframe-deny"] {
           display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
         }
-        .iframe-blocker, .frame-blocker, [class*="frame-deny"] {
+        [style*="position: fixed"][style*="z-index"], .overlay-blocker {
           display: none !important;
         }
       </style>`)
