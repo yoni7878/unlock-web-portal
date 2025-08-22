@@ -286,7 +286,6 @@ serve(async (req) => {
     } else {
       console.log(`Non-HTML content type: ${contentType}`)
     }
-    }
 
     return new Response(
       JSON.stringify({ 
