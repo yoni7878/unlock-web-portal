@@ -172,8 +172,22 @@ serve(async (req) => {
               if (link && link.href && !link.href.startsWith('javascript:') && !link.href.startsWith('#')) {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 window.parent.postMessage({type: 'navigate', url: link.href}, '*');
                 return false;
+              }
+            }, true);
+            
+            // Additional click interception for buttons and other clickable elements
+            document.addEventListener('click', function(e) {
+              const target = e.target;
+              if (target && target.onclick && typeof target.onclick === 'function') {
+                const originalOnClick = target.onclick;
+                target.onclick = function(event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  return false;
+                };
               }
             }, true);
             

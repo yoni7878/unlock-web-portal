@@ -46,11 +46,11 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
       color: "text-red-400"
     },
     {
-      name: "Google",
-      url: "https://google.com",
+      name: "DuckDuckGo",
+      url: "https://duckduckgo.com",
       icon: Search,
       category: "Search",
-      color: "text-blue-400"
+      color: "text-orange-400"
     },
     {
       name: "Discord",
@@ -88,16 +88,33 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
     e.preventDefault();
     if (searchUrl) {
       let url = searchUrl;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
+      
+      // Check if it's a direct website URL or a search query
+      const isUrl = searchUrl.includes('.') && !searchUrl.includes(' ');
+      
+      if (isUrl) {
+        // Direct website navigation
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        setProxyUrl(url);
+        toast({
+          title: "Loading website",
+          description: "Opening via secure proxy...",
+        });
+      } else {
+        // Search query - use DuckDuckGo
+        const searchQuery = encodeURIComponent(searchUrl);
+        url = `https://duckduckgo.com/?q=${searchQuery}`;
+        setProxyUrl(url);
+        toast({
+          title: "Searching DuckDuckGo",
+          description: "Performing search via secure proxy...",
+        });
       }
-      setProxyUrl(url);
+      
       setShowProxy(true);
       setSearchUrl("");
-      toast({
-        title: "Loading website",
-        description: "Opening via secure proxy...",
-      });
     }
   };
 
@@ -155,7 +172,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
           <form onSubmit={handleCustomSearch} className="flex gap-3">
             <Input
               type="text"
-              placeholder="Enter website URL (e.g., github.com)"
+              placeholder="Enter website URL or search DuckDuckGo (e.g., github.com or 'cat videos')"
               value={searchUrl}
               onChange={(e) => setSearchUrl(e.target.value)}
               className="flex-1 h-12"

@@ -147,13 +147,6 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
               <RotateCcw className="w-4 h-4" />
             </Button>
             <Button
-              onClick={handleOpenInNewTab}
-              variant="outline"
-              size="sm"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-            <Button
               onClick={toggleFullscreen}
               variant="outline"
               size="sm"
@@ -182,9 +175,6 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
             <div className="flex gap-2 justify-center">
               <Button onClick={handleRefresh} variant="outline">
                 Try Again
-              </Button>
-              <Button onClick={handleOpenInNewTab}>
-                Open in New Tab
               </Button>
             </div>
           </Card>
