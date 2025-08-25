@@ -69,7 +69,7 @@ serve(async (req) => {
     proxyHeaders.delete('X-Frame-Options');
     proxyHeaders.delete('Frame-Options');
 
-    const proxyRequest = new Request(targetUrl, {
+    const proxyRequest = new Request(targetUrlObj.toString(), {
       method: req.method,
       headers: proxyHeaders,
       body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : null,
@@ -79,6 +79,12 @@ serve(async (req) => {
     
     console.log(`Response status: ${response.status} for ${targetUrl}`);
 
+    // Get content type before reading body
+    const contentType = response.headers.get('content-type') || '';
+    
+    // Read the response body once
+    const content = await response.text();
+    
     // Create response headers
     const responseHeaders = new Headers(corsHeaders);
     
@@ -87,27 +93,24 @@ serve(async (req) => {
       const lowerKey = key.toLowerCase();
       
       if (lowerKey === 'x-frame-options' || lowerKey === 'frame-options') {
-        // Allow iframe embedding
-        continue; // Skip these headers
+        // Skip these headers to allow iframe embedding
+        continue;
       } else if (lowerKey === 'content-security-policy') {
-        // Remove or modify CSP to allow iframe embedding
-        responseHeaders.set(key, "default-src * 'unsafe-inline' 'unsafe-eval'; frame-ancestors *; child-src *;");
+        // Modify CSP to allow iframe embedding
+        responseHeaders.set(key, "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors *; child-src *;");
       } else if (lowerKey !== 'content-encoding' && lowerKey !== 'transfer-encoding') {
         responseHeaders.set(key, value);
       }
     }
 
-    // Handle different content types
-    const contentType = response.headers.get('content-type') || '';
-    
+    let processedContent = content;
+
+    // Process HTML content if needed
     if (contentType.includes('text/html')) {
-      let html = await response.text();
-      
-      // Inject scripts and modify content to work in iframe
       const baseUrl = `${targetUrlObj.protocol}//${targetUrlObj.host}`;
       
-      // More aggressive HTML modification
-      html = html
+      // Inject scripts and modify content to work in iframe
+      processedContent = content
         // Remove iframe busters
         .replace(/<script[^>]*>[\s\S]*?(if|while)[\s\S]*?(top|parent|frameElement)[\s\S]*?<\/script>/gi, '')
         .replace(/if\s*\(\s*(window\s*[!=]=?\s*top|top\s*[!=]=?\s*self|self\s*[!=]=?\s*top)/gi, 'if(false')
@@ -124,13 +127,13 @@ serve(async (req) => {
         .replace(/src\s*=\s*["']\s*\/\/([^"']*?)["']/g, `src="https://$1"`);
       
       // Inject our scripts
-      html = html.replace(/<head[^>]*>/i, (match) => `${match}
+      processedContent = processedContent.replace(/<head[^>]*>/i, (match) => `${match}
         <base href="${baseUrl}/">
         <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors *; child-src *;">
         <script>
           console.log('Proxy script loaded for ${targetUrlObj.hostname}');
           
-          // Completely override iframe detection
+          // Override iframe detection
           try {
             Object.defineProperty(window, 'top', {
               get: () => window,
@@ -153,7 +156,7 @@ serve(async (req) => {
             window.parent = window;
           } catch(e) { console.log('Override error:', e); }
           
-          // Intercept navigation attempts
+          // Intercept navigation
           const originalOpen = window.open;
           window.open = function(url, target, features) {
             console.log('Blocked window.open:', url);
@@ -161,24 +164,6 @@ serve(async (req) => {
               window.parent.postMessage({type: 'navigate', url: url}, '*');
             }
             return null;
-          };
-          
-          // Override location methods
-          const originalAssign = location.assign;
-          const originalReplace = location.replace;
-          
-          location.assign = function(url) {
-            console.log('Blocked location.assign:', url);
-            if (window.parent !== window) {
-              window.parent.postMessage({type: 'navigate', url: url}, '*');
-            }
-          };
-          
-          location.replace = function(url) {
-            console.log('Blocked location.replace:', url);
-            if (window.parent !== window) {
-              window.parent.postMessage({type: 'navigate', url: url}, '*');
-            }
           };
           
           // Intercept clicks
@@ -194,41 +179,15 @@ serve(async (req) => {
             }
           }, true);
           
-          // Intercept form submissions
-          document.addEventListener('submit', function(e) {
-            const form = e.target;
-            if (form && form.action) {
-              e.preventDefault();
-              console.log('Intercepted form:', form.action);
-              if (window.parent !== window) {
-                const url = form.method === 'GET' ? 
-                  form.action + '?' + new URLSearchParams(new FormData(form)).toString() :
-                  form.action;
-                window.parent.postMessage({type: 'navigate', url: url}, '*');
-              }
-            }
-          }, true);
-          
-          console.log('All proxy overrides applied');
+          console.log('Proxy overrides applied');
         </script>`);
-      
-      return new Response(JSON.stringify({ 
-        content: html, 
-        contentType,
-        url: targetUrlObj.toString() 
-      }), {
-        status: response.status,
-        statusText: response.statusText,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
     }
-    
-    // For non-HTML content, return as JSON like the original
-    const content = await response.text();
-    return new Response(JSON.stringify({
-      content,
+
+    // Return JSON response as expected by frontend
+    return new Response(JSON.stringify({ 
+      content: processedContent, 
       contentType,
-      url: targetUrlObj.toString()
+      url: targetUrlObj.toString() 
     }), {
       status: response.status,
       statusText: response.statusText,
