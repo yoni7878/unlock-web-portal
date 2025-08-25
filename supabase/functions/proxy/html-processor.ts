@@ -57,7 +57,8 @@ export function processHtmlContent(content: string, targetUrl: URL): string {
     }
     
     // Fix relative links and resources
-    .replace(/href\s*=\s*["']\s*\/([^"']*?)["']/g, `href="${baseUrl}/$1"`)
+    processedContent = processedContent
+      .replace(/href\s*=\s*["']\s*\/([^"']*?)["']/g, `href="${baseUrl}/$1"`)
     .replace(/src\s*=\s*["']\s*\/([^"']*?)["']/g, `src="${baseUrl}/$1"`)
     .replace(/action\s*=\s*["']\s*\/([^"']*?)["']/g, `action="${baseUrl}/$1"`)
     
