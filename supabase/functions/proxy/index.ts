@@ -15,17 +15,36 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const targetUrl = url.searchParams.get('url');
+    let targetUrl: string;
+    
+    // Handle both GET (query param) and POST (JSON body) requests
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      targetUrl = url.searchParams.get('url') || '';
+    } else {
+      const body = await req.json();
+      targetUrl = body.url || '';
+    }
     
     if (!targetUrl) {
-      return new Response('Missing URL parameter', { 
+      return new Response(JSON.stringify({ error: 'Missing URL parameter' }), { 
         status: 400, 
-        headers: corsHeaders 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     console.log(`Proxying request to: ${targetUrl}`);
+
+    // Validate URL format
+    let targetUrlObj: URL;
+    try {
+      targetUrlObj = new URL(targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`);
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid URL format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Create headers for the proxied request
     const proxyHeaders = new Headers();
@@ -41,7 +60,6 @@ serve(async (req) => {
     }
 
     // Set proper headers for the target
-    const targetUrlObj = new URL(targetUrl);
     proxyHeaders.set('Host', targetUrlObj.host);
     proxyHeaders.set('Origin', targetUrlObj.origin);
     proxyHeaders.set('Referer', targetUrl);
@@ -194,25 +212,34 @@ serve(async (req) => {
           console.log('All proxy overrides applied');
         </script>`);
       
-      return new Response(html, {
+      return new Response(JSON.stringify({ 
+        content: html, 
+        contentType,
+        url: targetUrlObj.toString() 
+      }), {
         status: response.status,
         statusText: response.statusText,
-        headers: responseHeaders
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
-    // For non-HTML content, pass through as-is
-    return new Response(response.body, {
+    // For non-HTML content, return as JSON like the original
+    const content = await response.text();
+    return new Response(JSON.stringify({
+      content,
+      contentType,
+      url: targetUrlObj.toString()
+    }), {
       status: response.status,
       statusText: response.statusText,
-      headers: responseHeaders
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('Proxy error:', error);
-    return new Response(`Proxy error: ${error.message}`, { 
+    return new Response(JSON.stringify({ error: `Proxy error: ${error.message}` }), { 
       status: 500,
-      headers: corsHeaders 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 });
