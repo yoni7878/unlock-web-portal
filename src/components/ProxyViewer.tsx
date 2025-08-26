@@ -11,20 +11,44 @@ import {
   Maximize
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ProxyViewerProps {
   initialUrl?: string;
   onBack: () => void;
 }
 
+declare global {
+  interface Window {
+    __uv$config: any;
+  }
+}
+
 export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
   const [currentUrl, setCurrentUrl] = useState(initialUrl || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [content, setContent] = useState("");
+  const [proxiedUrl, setProxiedUrl] = useState("");
   const [error, setError] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [swRegistered, setSwRegistered] = useState(false);
   const { toast } = useToast();
+
+  const registerServiceWorker = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.register('/uv/uv.sw.js', {
+          scope: '/uv/service/',
+        });
+        console.log('UV Service Worker registered:', registration);
+        setSwRegistered(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('UV Service Worker registration failed:', error);
+      setError('Failed to register service worker');
+      return false;
+    }
+    return false;
+  };
 
   const loadUrl = async (url: string) => {
     if (!url) return;
@@ -33,23 +57,33 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
     setError("");
     
     try {
-      const { data, error: funcError } = await supabase.functions.invoke('proxy', {
-        body: { url }
-      });
-
-      if (funcError) {
-        throw new Error(funcError.message);
+      // Ensure service worker is registered
+      if (!swRegistered) {
+        const registered = await registerServiceWorker();
+        if (!registered) {
+          throw new Error('Service worker registration failed');
+        }
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      // Format URL
+      let formattedUrl = url;
+      if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+        formattedUrl = 'https://' + formattedUrl;
       }
 
-      setContent(data.content);
-      toast({
-        title: "Success",
-        description: "Website loaded successfully",
-      });
+      // Encode URL using Ultraviolet
+      if (window.__uv$config) {
+        const encodedUrl = window.__uv$config.encodeUrl(formattedUrl);
+        const proxyUrl = window.__uv$config.prefix + encodedUrl;
+        setProxiedUrl(proxyUrl);
+        
+        toast({
+          title: "Success",
+          description: "Website loaded successfully",
+        });
+      } else {
+        throw new Error('Ultraviolet not loaded');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load website";
       setError(errorMessage);
@@ -64,20 +98,12 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
   };
 
   useEffect(() => {
+    // Register service worker on component mount
+    registerServiceWorker();
+    
     if (initialUrl) {
       loadUrl(initialUrl);
     }
-
-    // Listen for navigation messages from iframe
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'navigate' && event.data.url) {
-        setCurrentUrl(event.data.url);
-        loadUrl(event.data.url);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
   }, [initialUrl]);
 
   const handleUrlSubmit = (e: React.FormEvent) => {
@@ -180,28 +206,13 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
           </Card>
         )}
 
-        {content && !isLoading && !error && (
+        {proxiedUrl && !isLoading && !error && (
           <Card className="portal-card p-0 overflow-hidden">
             <iframe
-              srcDoc={content}
+              src={proxiedUrl}
               className={`w-full border-0 ${isFullscreen ? 'h-[calc(100vh-100px)]' : 'h-[600px]'}`}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               title="Proxied Website"
               style={{ backgroundColor: 'white' }}
-              onLoad={() => {
-                // Additional safety: prevent navigation within iframe
-                const iframe = document.querySelector('iframe[title="Proxied Website"]') as HTMLIFrameElement;
-                if (iframe?.contentWindow) {
-                  try {
-                    iframe.contentWindow.addEventListener('beforeunload', (e) => {
-                      e.preventDefault();
-                      return false;
-                    });
-                  } catch (e) {
-                    // Cross-origin restriction, ignore
-                  }
-                }
-              }}
             />
           </Card>
         )}
