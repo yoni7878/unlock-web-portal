@@ -19,7 +19,19 @@ interface ProxyViewerProps {
 
 declare global {
   interface Window {
-    __uv$config: any;
+    __uv$config: {
+      prefix: string;
+      encodeUrl: (url: string) => string;
+      decodeUrl: (url: string) => string;
+    };
+    Ultraviolet: {
+      codec: {
+        xor: {
+          encode: (url: string) => string;
+          decode: (url: string) => string;
+        };
+      };
+    };
   }
 }
 
@@ -72,9 +84,9 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
       }
 
       // Encode URL using Ultraviolet
-      if (window.__uv$config) {
+      if (window.__uv$config && window.Ultraviolet) {
         const encodedUrl = window.__uv$config.encodeUrl(formattedUrl);
-        const proxyUrl = window.__uv$config.prefix + encodedUrl;
+        const proxyUrl = window.location.origin + window.__uv$config.prefix + encodedUrl;
         setProxiedUrl(proxyUrl);
         
         toast({
@@ -82,7 +94,7 @@ export const ProxyViewer = ({ initialUrl, onBack }: ProxyViewerProps) => {
           description: "Website loaded successfully",
         });
       } else {
-        throw new Error('Ultraviolet not loaded');
+        throw new Error('Ultraviolet not loaded - please refresh the page');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load website";
