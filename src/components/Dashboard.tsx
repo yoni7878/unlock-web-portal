@@ -13,7 +13,8 @@ import {
   LogOut,
   ExternalLink,
   Star,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Gamepad2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProxyViewer } from "./ProxyViewer";
@@ -147,6 +148,14 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button
+            onClick={() => window.location.href = '/games'}
+            variant="outline"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm"
+          >
+            <Gamepad2 className="w-4 h-4" />
+            Games
+          </Button>
           <Button
             onClick={() => setShowSettings(true)}
             variant="outline"
