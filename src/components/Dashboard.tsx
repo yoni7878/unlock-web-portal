@@ -136,17 +136,21 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-4xl font-bold gradient-text">UnblockEd Portal</h1>
-          <p className="text-muted-foreground mt-2">Access the web without limits</p>
+    <div className="min-h-screen p-6 animate-fade-in">
+      <header className="flex justify-between items-center mb-12 max-w-6xl mx-auto">
+        <div className="space-y-2">
+          <h1 className="hero-title animate-scale-in">UnblockEd Portal</h1>
+          <p className="text-xl text-muted-foreground/90 font-medium">Access the web without limits</p>
+          <div className="flex items-center gap-2 mt-4">
+            <div className="status-dot"></div>
+            <span className="text-sm font-mono text-green-400">System Online</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Button
             onClick={() => setShowSettings(true)}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm"
           >
             <SettingsIcon className="w-4 h-4" />
             Settings
@@ -154,7 +158,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
           <Button
             onClick={onLogout}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-red-400/40 hover:text-red-400 transition-all duration-300 backdrop-blur-sm"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -162,55 +166,69 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-12">
         {/* Custom URL Search */}
-        <Card className="portal-card p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Globe className="w-6 h-6 text-primary" />
-            Browse Any Website
-          </h2>
-          <form onSubmit={handleCustomSearch} className="flex gap-3">
+        <Card className="portal-card p-8 interactive-card">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Globe className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold">Browse Any Website</h2>
+              <p className="text-muted-foreground">Enter a URL or search query to get started</p>
+            </div>
+          </div>
+          <form onSubmit={handleCustomSearch} className="flex gap-4">
             <Input
               type="text"
               placeholder="Enter website URL or search DuckDuckGo (e.g., github.com or 'cat videos')"
               value={searchUrl}
               onChange={(e) => setSearchUrl(e.target.value)}
-              className="flex-1 h-12"
+              className="flex-1 h-14 px-6 rounded-xl bg-background/50 border-border/60 focus:border-primary/50 text-lg placeholder:text-muted-foreground/60"
             />
-            <Button type="submit" className="portal-button">
-              <ExternalLink className="w-5 h-5" />
+            <Button type="submit" className="portal-button h-14 px-8">
+              <ExternalLink className="w-5 h-5 mr-2" />
+              Go
             </Button>
           </form>
         </Card>
 
         {/* Popular Sites Grid */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-            <Star className="w-6 h-6 text-primary" />
-            Popular Sites
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularSites.map((site) => {
+        <div className="space-y-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-primary/10 rounded-xl animate-bounce-gentle">
+              <Star className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold">Popular Sites</h2>
+              <p className="text-muted-foreground">Quick access to your favorite destinations</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {popularSites.map((site, index) => {
               const IconComponent = site.icon;
               return (
                 <div
                   key={site.name}
-                  className="site-grid-item group"
+                  className="site-grid-item group animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => handleOpenSite(site.url, site.name)}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <IconComponent className={`w-8 h-8 ${site.color} group-hover:scale-110 transition-transform duration-200`} />
-                    <span className="text-xs px-2 py-1 bg-secondary rounded-full text-muted-foreground">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="p-4 bg-secondary/50 rounded-2xl group-hover:bg-primary/10 transition-colors duration-300">
+                      <IconComponent className={`w-8 h-8 ${site.color} group-hover:scale-110 transition-transform duration-300`} />
+                    </div>
+                    <span className="text-xs px-3 py-1.5 bg-secondary/80 rounded-full text-muted-foreground font-medium border border-border/40">
                       {site.category}
                     </span>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{site.name}</h3>
-                  <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors duration-300">{site.name}</h3>
+                  <p className="text-muted-foreground group-hover:text-foreground/80 transition-colors duration-300 mb-6">
                     Access {site.name} without restrictions
                   </p>
-                  <div className="mt-4 flex items-center text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-sm">Open site</span>
-                    <ExternalLink className="w-4 h-4 ml-2" />
+                  <div className="flex items-center text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                    <span className="font-semibold">Open site</span>
+                    <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
               );
@@ -219,11 +237,14 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
         </div>
 
         {/* Status Footer */}
-        <div className="mt-12 text-center">
-          <Card className="portal-card p-4 inline-block">
-            <div className="flex items-center gap-2 text-green-400">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm">Proxy Status: Connected</span>
+        <div className="text-center pt-8">
+          <Card className="portal-card p-6 inline-block interactive-card">
+            <div className="status-indicator">
+              <div className="status-dot"></div>
+              <div className="text-left">
+                <div className="font-semibold text-green-400">Proxy Status: Connected</div>
+                <div className="text-xs text-muted-foreground font-mono">Secured connection established</div>
+              </div>
             </div>
           </Card>
         </div>
