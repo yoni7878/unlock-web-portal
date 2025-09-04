@@ -48,8 +48,8 @@ export const Games = ({ onBack }: GamesProps) => {
         {onBack && (
           <Button
             onClick={onBack}
-            variant="outline"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm"
+            variant="secondary"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300"
           >
             <ArrowLeft className="w-4 h-4" />
             Back

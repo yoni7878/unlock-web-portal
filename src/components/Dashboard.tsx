@@ -150,24 +150,24 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
         <div className="flex items-center gap-4">
           <Button
             onClick={() => window.location.href = '/games'}
-            variant="outline"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm"
+            variant="secondary"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300"
           >
             <Gamepad2 className="w-4 h-4" />
             Games
           </Button>
           <Button
             onClick={() => setShowSettings(true)}
-            variant="outline"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-primary/40 transition-all duration-300 backdrop-blur-sm"
+            variant="secondary"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300"
           >
             <SettingsIcon className="w-4 h-4" />
             Settings
           </Button>
           <Button
             onClick={onLogout}
-            variant="outline"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border-border/60 hover:border-red-400/40 hover:text-red-400 transition-all duration-300 backdrop-blur-sm"
+            variant="destructive"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -193,7 +193,7 @@ export const Dashboard = ({ onLogout }: DashboardProps) => {
               placeholder="Enter website URL or search DuckDuckGo (e.g., github.com or 'cat videos')"
               value={searchUrl}
               onChange={(e) => setSearchUrl(e.target.value)}
-              className="flex-1 h-14 px-6 rounded-xl bg-background/50 border-border/60 focus:border-primary/50 text-lg placeholder:text-muted-foreground/60"
+              className="flex-1 h-14 px-6 rounded-xl text-lg"
             />
             <Button type="submit" className="portal-button h-14 px-8">
               <ExternalLink className="w-5 h-5 mr-2" />
