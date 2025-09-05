@@ -77,27 +77,32 @@ export const UserManager = ({ loading, onUpdate }: UserManagerProps) => {
 
   const toggleBanUser = async (userId: string, currentBanStatus: boolean) => {
     try {
+      const newBanStatus = !currentBanStatus;
       const { error } = await supabase
         .from('license_users')
-        .update({ is_banned: !currentBanStatus })
+        .update({ 
+          is_banned: newBanStatus,
+          last_used_at: new Date().toISOString()
+        })
         .eq('id', userId);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `User ${!currentBanStatus ? 'banned' : 'unbanned'} successfully`,
-      });
+      // Update local state immediately for better UX
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, is_banned: newBanStatus }
+          : user
+      ));
 
-      loadUsers();
-      onUpdate();
+      // Show success message
+      console.log(`User ${newBanStatus ? 'banned' : 'unbanned'} successfully`);
+      
+      onUpdate?.();
     } catch (error) {
       console.error('Error updating user ban status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update user ban status",
-        variant: "destructive",
-      });
+      // Revert local state on error
+      loadUsers();
     }
   };
 

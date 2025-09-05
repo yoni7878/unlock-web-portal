@@ -142,6 +142,114 @@
     --portal-shadow: 0 25px 50px -12px hsla(20, 91%, 20%, 0.25);
   }
 
+  /* Red Theme */
+  [data-theme="red"] {
+    --background: 0 20% 8%;
+    --foreground: 0 40% 98%;
+    --card: 0 25% 10%;
+    --card-foreground: 0 40% 98%;
+    --popover: 0 25% 10%;
+    --popover-foreground: 0 40% 98%;
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 20% 8%;
+    --secondary: 0 25% 15%;
+    --secondary-foreground: 0 40% 98%;
+    --muted: 0 25% 12%;
+    --muted-foreground: 0 20.2% 65.1%;
+    --accent: 0 72% 51%;
+    --accent-foreground: 0 20% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 40% 98%;
+    --border: 0 25% 18%;
+    --input: 0 25% 15%;
+    --ring: 0 72% 51%;
+    --radius: 0.75rem;
+    --hero-gradient: linear-gradient(135deg, hsl(0 72% 51%) 0%, hsl(14 91% 51%) 100%);
+    --glow: 0 0 20px hsla(0, 72%, 51%, 0.3);
+    --portal-shadow: 0 25px 50px -12px hsla(0, 72%, 20%, 0.25);
+  }
+
+  /* Pink Theme */
+  [data-theme="pink"] {
+    --background: 315 20% 8%;
+    --foreground: 315 40% 98%;
+    --card: 315 25% 10%;
+    --card-foreground: 315 40% 98%;
+    --popover: 315 25% 10%;
+    --popover-foreground: 315 40% 98%;
+    --primary: 329 86% 70%;
+    --primary-foreground: 315 20% 8%;
+    --secondary: 315 25% 15%;
+    --secondary-foreground: 315 40% 98%;
+    --muted: 315 25% 12%;
+    --muted-foreground: 315 20.2% 65.1%;
+    --accent: 329 86% 70%;
+    --accent-foreground: 315 20% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 315 40% 98%;
+    --border: 315 25% 18%;
+    --input: 315 25% 15%;
+    --ring: 329 86% 70%;
+    --radius: 0.75rem;
+    --hero-gradient: linear-gradient(135deg, hsl(329 86% 70%) 0%, hsl(314 100% 74%) 100%);
+    --glow: 0 0 20px hsla(329, 86%, 70%, 0.3);
+    --portal-shadow: 0 25px 50px -12px hsla(329, 86%, 20%, 0.25);
+  }
+
+  /* Cyan Theme */
+  [data-theme="cyan"] {
+    --background: 191 20% 8%;
+    --foreground: 191 40% 98%;
+    --card: 191 25% 10%;
+    --card-foreground: 191 40% 98%;
+    --popover: 191 25% 10%;
+    --popover-foreground: 191 40% 98%;
+    --primary: 188 94% 43%;
+    --primary-foreground: 191 20% 8%;
+    --secondary: 191 25% 15%;
+    --secondary-foreground: 191 40% 98%;
+    --muted: 191 25% 12%;
+    --muted-foreground: 191 20.2% 65.1%;
+    --accent: 188 94% 43%;
+    --accent-foreground: 191 20% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 191 40% 98%;
+    --border: 191 25% 18%;
+    --input: 191 25% 15%;
+    --ring: 188 94% 43%;
+    --radius: 0.75rem;
+    --hero-gradient: linear-gradient(135deg, hsl(188 94% 43%) 0%, hsl(181 77% 55%) 100%);
+    --glow: 0 0 20px hsla(188, 94%, 43%, 0.3);
+    --portal-shadow: 0 25px 50px -12px hsla(188, 94%, 20%, 0.25);
+  }
+
+  /* Indigo Theme */
+  [data-theme="indigo"] {
+    --background: 231 20% 8%;
+    --foreground: 231 40% 98%;
+    --card: 231 25% 10%;
+    --card-foreground: 231 40% 98%;
+    --popover: 231 25% 10%;
+    --popover-foreground: 231 40% 98%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 231 20% 8%;
+    --secondary: 231 25% 15%;
+    --secondary-foreground: 231 40% 98%;
+    --muted: 231 25% 12%;
+    --muted-foreground: 231 20.2% 65.1%;
+    --accent: 239 84% 67%;
+    --accent-foreground: 231 20% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 231 40% 98%;
+    --border: 231 25% 18%;
+    --input: 231 25% 15%;
+    --ring: 239 84% 67%;
+    --radius: 0.75rem;
+    --hero-gradient: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(248 100% 70%) 100%);
+    --glow: 0 0 20px hsla(239, 84%, 67%, 0.3);
+    --portal-shadow: 0 25px 50px -12px hsla(239, 84%, 20%, 0.25);
+  }
+
   * {
     @apply border-border;
   }
