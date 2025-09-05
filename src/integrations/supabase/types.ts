@@ -44,6 +44,57 @@ export type Database = {
         }
         Relationships: []
       }
+      license_users: {
+        Row: {
+          email: string | null
+          first_used_at: string | null
+          id: string
+          ip_address: unknown | null
+          is_banned: boolean | null
+          last_used_at: string | null
+          license_key_id: string | null
+          user_agent: string | null
+          username: string
+        }
+        Insert: {
+          email?: string | null
+          first_used_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_banned?: boolean | null
+          last_used_at?: string | null
+          license_key_id?: string | null
+          user_agent?: string | null
+          username: string
+        }
+        Update: {
+          email?: string | null
+          first_used_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          is_banned?: boolean | null
+          last_used_at?: string | null
+          license_key_id?: string | null
+          user_agent?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "license_users_license_key_id_fkey"
+            columns: ["license_key_id"]
+            isOneToOne: false
+            referencedRelation: "active_license_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "license_users_license_key_id_fkey"
+            columns: ["license_key_id"]
+            isOneToOne: false
+            referencedRelation: "license_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       active_license_keys: {
